@@ -80,6 +80,7 @@ before_install:
   - docker exec -i roborb-soft bash -c "rm rob-orb.list"
   - docker exec -i roborb-soft bash -c "sudo apt update"
   - docker exec -i roborb-soft bash -c "sudo apt install ros-$ROS_DISTRO-bare"
+  - docker exec -i roborb-soft bash -c "/opt/ros/kinetic/initialize.sh"
   - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash"
 
 # Create a catkin workspace with the package under integration.
