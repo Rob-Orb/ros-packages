@@ -80,34 +80,35 @@ before_install:
   - docker exec -i roborb-soft bash -c "rm rob-orb.list"
   - docker exec -i roborb-soft bash -c "sudo apt update"
   - docker exec -i roborb-soft bash -c "sudo apt install ros-$ROS_DISTRO-bare"
-  - docker exec -i roborb-soft bash -c "/opt/ros/kinetic/initialize.sh"
-  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash"
-
+  - docker exec -i roborb-soft bash -c "/opt/ros/$ROS_DISTRO/initialize.sh"
 # Create a catkin workspace with the package under integration.
 install:
-  - docker exec -i roborb-soft bash -c "mkdir -p ~/catkin_ws/src"
-  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws/src"
-  - docker exec -i roborb-soft bash -c "catkin_init_workspace"
+  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash &&
+  mkdir -p ~/catkin_ws/src &&
+  cd ~/catkin_ws/src &&
+  catkin_init_workspace &&
+  cd ~/catkin_ws &&
+  catkin_make"
   # Create the devel/setup.bash (run catkin_make with an empty workspace) and
   # source it to set the path variables.
-  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws"
-  - docker exec -i roborb-soft bash -c "catkin_make"
-  - docker exec -i roborb-soft bash -c "source devel/setup.bash"
+  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash && cd ~/catkin_ws &&
+  catkin_make &&
+  source devel/setup.bash"
   # Add the package under integration to the workspace using a symlink.
-  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws/src"
-  - docker exec -i roborb-soft bash -c "ln -s /var/tmp/ros-packages/ ."
+  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws/src &&
+  ln -s /var/tmp/ros-packages/ ."
 
 # Install all dependencies, using wstool first and rosdep second.
 # wstool looks for a ROSINSTALL_FILE defined in the environment variables.
 before_script:
   # source dependencies: install using wstool.
-  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws/src"
-  - docker exec -i roborb-soft bash -c "wstool init"
-  - docker exec -i roborb-soft bash -c "if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi"
-  - docker exec -i roborb-soft bash -c "wstool up"
+  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws/src &&
+  wstool init &&
+  if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi &&
+  wstool up"
   # package depdencies: install using rosdep.
-  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws"
-  - docker exec -i roborb-soft bash -c "rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO"
+  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/kinetic/setup.bash && cd ~/catkin_ws &&
+  rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO"
 
 # Compile and test (mark the build as failed if any step fails). If the
 # CATKIN_OPTIONS file exists, use it as an argument to catkin_make, for example
@@ -118,9 +119,9 @@ before_script:
 # fails. Running `catkin_test_results` aggregates all the results and returns
 # non-zero when a test fails (which notifies Travis the build failed).
 script:
-  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash"
-  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws"
-  - docker exec -i roborb-soft bash -c "catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )"
+  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash &&
+  cd ~/catkin_ws &&
+  catkin_make $( [ -f $CATKIN_OPTIONS ] && cat $CATKIN_OPTIONS )"
   # Run the tests, ensuring the path is set correctly.
-  - docker exec -i roborb-soft bash -c "source devel/setup.bash"
-  - docker exec -i roborb-soft bash -c "catkin_make run_tests && catkin_test_results"
+  - docker exec -i roborb-soft bash -c "cd ~/catkin_ws && source devel/setup.bash &&
+  catkin_make run_tests && catkin_test_results"
