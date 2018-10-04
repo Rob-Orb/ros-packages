@@ -96,7 +96,7 @@ before_script:
   # source dependencies: install using wstool.
   - docker exec -i roborb-soft bash -c "cd ~/catkin_ws/src && wstool init && if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi && wstool up"
   # package depdencies: install using rosdep.
-  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/kinetic/setup.bash && cd ~/catkin_ws && rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO"
+  - docker exec -i roborb-soft bash -c "source /opt/ros/$ROS_DISTRO/setup.bash && cd ~/catkin_ws && rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO"
 
 # Compile and test (mark the build as failed if any step fails). If the
 # CATKIN_OPTIONS file exists, use it as an argument to catkin_make, for example
